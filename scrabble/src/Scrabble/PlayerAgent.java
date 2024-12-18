@@ -25,6 +25,7 @@ public class PlayerAgent extends Agent {
 
     protected void setup() {
         System.out.println("PlayerAgent " + getLocalName() + " started.");
+        System.out.println("PlayerAgent " + getLocalName() + " started.");
         registerWithDF();
         action();
         addBehaviour(new TurnListenerBehaviour()); // Menambahkan listener untuk giliran
