@@ -4,7 +4,7 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import javax.swing.*;
-
+import java.awt.datatransfer.*;
 import java.awt.*;
 import java.util.Random;
 import java.awt.event.MouseAdapter;
@@ -126,12 +126,70 @@ public class BoardAgent extends Agent {
                     boardPanel.add(button);
 
                     // Drag-and-drop listener untuk tiles
-                    button.setTransferHandler(new TransferHandler("text"));
                     int finalRow = row;
                     int finalCol = col;
-                    button.addActionListener(e -> {
-                        String tile = button.getText();
-                        System.out.printf("Tile placed at [%d, %d]: %s%n", finalRow, finalCol, tile);
+
+                    button.setTransferHandler(new TransferHandler("text") {
+                        @Override
+                        public boolean canImport(TransferSupport support) {
+                            // Memastikan bahwa data yang diterima sesuai dengan DataFlavor.stringFlavor
+                            if (support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+
+                        @Override
+                        public boolean importData(TransferSupport support) {
+                            try {
+                                // Ambil teks tile yang di-drag
+                                String tile = (String) support.getTransferable()
+                                        .getTransferData(DataFlavor.stringFlavor);
+
+                                // Validasi jika posisi kosong atau memiliki kotak khusus
+                                if (scrabbleBoard[finalRow][finalCol].equals("_")
+                                        || scrabbleBoard[finalRow][finalCol].equals("TW")
+                                        || scrabbleBoard[finalRow][finalCol].equals("DW")
+                                        || scrabbleBoard[finalRow][finalCol].equals("TL")
+                                        || scrabbleBoard[finalRow][finalCol].equals("DL")) {
+
+                                    // Tempatkan tile di posisi baru pada papan
+                                    scrabbleBoard[finalRow][finalCol] = tile;
+                                    button.setText(tile); // Menampilkan tile pada tombol
+
+                                    // Mengosongkan tile yang di-drag setelah berhasil di drop
+                                    // Jika label yang di-drag, kosongkan teksnya
+                                    // Anda harus mengidentifikasi dari mana tile tersebut di-drag
+                                    for (Component comp : tilePanel.getComponents()) {
+                                        if (comp instanceof JLabel) {
+                                            JLabel draggedTile = (JLabel) comp;
+                                            if (draggedTile.getText().equals(tile)) {
+                                                draggedTile.setText(""); // Mengosongkan label yang di-drag
+                                                break; // Hentikan pencarian setelah menemukan label yang cocok
+                                            }
+                                        }
+                                    }
+
+                                    JOptionPane.showMessageDialog(null,
+                                            "Success! Tile placed at [" + finalRow + ", " + finalCol + "]",
+                                            "Tile Placed",
+                                            JOptionPane.INFORMATION_MESSAGE);
+
+                                    return true;
+                                } else {
+                                    JOptionPane.showMessageDialog(null,
+                                            "Error: Tile already placed at [" + finalRow + ", " + finalCol + "]!",
+                                            "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(null,
+                                        "Error: Could not import data.", "Error", JOptionPane.ERROR_MESSAGE);
+                                ex.printStackTrace();
+                            }
+                            return false;
+                        }
                     });
                 }
             }
@@ -166,6 +224,7 @@ public class BoardAgent extends Agent {
             tilePanel.removeAll();
             String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             Random random = new Random();
+
             for (int i = 0; i < 5; i++) {
                 JLabel tile = new JLabel(String.valueOf(alphabet.charAt(random.nextInt(alphabet.length()))),
                         SwingConstants.CENTER);
@@ -174,22 +233,33 @@ public class BoardAgent extends Agent {
                 tile.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
                 // Ubah ukuran font agar lebih besar
-                tile.setFont(new Font("Arial", Font.PLAIN, 30)); // Mengubah ukuran font
+                tile.setFont(new Font("Arial", Font.PLAIN, 30));
 
-                tile.setTransferHandler(new TransferHandler("text"));
+                // Mengatur TransferHandler untuk memindahkan teks
+                tile.setTransferHandler(new TransferHandler("text") {
+                    @Override
+                    protected Transferable createTransferable(JComponent c) {
+                        // Mengambil teks dari JLabel saat drag dimulai
+                        String tileText = ((JLabel) c).getText();
+                        System.out.println("Dragging tile: " + tileText); // Debugging
+                        return new StringSelection(tileText); // Membungkus teks dalam StringSelection
+                    }
+                });
 
-                // Drag-and-drop listener
+                // Drag handling
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         JComponent comp = (JComponent) e.getSource();
                         TransferHandler handler = comp.getTransferHandler();
-                        handler.exportAsDrag(comp, e, TransferHandler.COPY);
+                        handler.exportAsDrag(comp, e, TransferHandler.COPY); // Memulai drag
+                        System.out.println("Dragging tile: " + ((JLabel) comp).getText()); // Debugging
                     }
                 });
 
                 tilePanel.add(tile);
             }
+
             tilePanel.revalidate();
             tilePanel.repaint();
         }
