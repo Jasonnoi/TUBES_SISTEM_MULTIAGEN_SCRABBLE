@@ -172,17 +172,18 @@ public class BoardAgent extends Agent {
                 tile.setOpaque(true);
                 tile.setBackground(new Color(240, 240, 240));
                 tile.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+                // Ubah ukuran font agar lebih besar
+                tile.setFont(new Font("Arial", Font.PLAIN, 30)); // Mengubah ukuran font
+
                 tile.setTransferHandler(new TransferHandler("text"));
 
                 // Drag-and-drop listener
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        // Mengambil sumber komponen yang dipilih
                         JComponent comp = (JComponent) e.getSource();
                         TransferHandler handler = comp.getTransferHandler();
-
-                        // Memulai drag and drop dengan metode COPY
                         handler.exportAsDrag(comp, e, TransferHandler.COPY);
                     }
                 });
