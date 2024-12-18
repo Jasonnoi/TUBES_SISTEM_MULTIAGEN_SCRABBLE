@@ -45,8 +45,9 @@ public class BoardAgent extends Agent {
         private JButton reshuffleButton;
         private JButton submitButton;
 
-        // Representasi papan Scrabble
-        private final String[][] scrabbleBoard = {
+        // Deklarasikan buttons dan scrabbleBoard sebagai variabel anggota kelas
+        private JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE]; // Inisialisasi array tombol
+        private String[][] scrabbleBoard = {
                 { "W", "_", "_", "L", "_", "_", "_", "W", "_", "_", "_", "L", "_", "_", "W" },
                 { "_", "w", "_", "_", "_", "l", "_", "_", "_", "l", "_", "_", "_", "w", "_" },
                 { "_", "_", "w", "_", "_", "_", "L", "_", "L", "_", "_", "_", "w", "_", "_" },
@@ -64,6 +65,15 @@ public class BoardAgent extends Agent {
                 { "W", "_", "_", "L", "_", "_", "_", "W", "_", "_", "_", "L", "_", "_", "W" }
         };
 
+        // Menempatkan kata secara vertikal di kolom tengah papan
+        private void placeWordVertically(String word) {
+            int startRow = (BOARD_SIZE / 2) - (word.length() / 2); // Menghitung posisi mulai
+            for (int i = 0; i < word.length(); i++) {
+                buttons[startRow + i][BOARD_SIZE / 2].setText(String.valueOf(word.charAt(i))); // Menempatkan huruf
+                buttons[startRow + i][BOARD_SIZE / 2].setBackground(new Color(200, 255, 200)); // Hijau muda
+            }
+        }
+
         public ScrabbleBoardUI() {
             setTitle("Scrabble Game Board");
             setSize(1000, 800);
@@ -78,7 +88,6 @@ public class BoardAgent extends Agent {
             add(boardPanel, BorderLayout.CENTER);
 
             // Inisialisasi papan
-            JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
             for (int row = 0; row < BOARD_SIZE; row++) {
                 for (int col = 0; col < BOARD_SIZE; col++) {
                     JButton button = new JButton();
@@ -113,7 +122,7 @@ public class BoardAgent extends Agent {
                             break;
                     }
 
-                    buttons[row][col] = button;
+                    buttons[row][col] = button; // Simpan tombol dalam array buttons
                     boardPanel.add(button);
 
                     // Drag-and-drop listener untuk tiles
@@ -139,6 +148,10 @@ public class BoardAgent extends Agent {
             controlPanel.add(reshuffleButton);
             controlPanel.add(submitButton);
             add(controlPanel, BorderLayout.EAST);
+            String[] wordList = { "CREATE", "AGENTSYSTEM", "COMPUTER", "PROGRAMMING", "JAVA" };
+            String selectedWord = wordList[new Random().nextInt(wordList.length)];
+
+            placeWordVertically(selectedWord);
 
             // Generate tiles pertama kali
             generateRandomTiles();
@@ -162,7 +175,6 @@ public class BoardAgent extends Agent {
                 tile.setTransferHandler(new TransferHandler("text"));
 
                 // Drag-and-drop listener
-                // Drag-and-drop listener untuk tile
                 tile.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
